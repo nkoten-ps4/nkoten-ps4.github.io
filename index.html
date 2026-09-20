@@ -1,0 +1,503 @@
+<!doctype html>
+<html lang="en" manifest="cache.appcache">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>PS4 JB: 13.02 - 13.52</title>
+    <style>
+      * {
+        -webkit-box-sizing: border-box;
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        background: #05060a;
+        color: #c8ffe0;
+        font-family: 'Consolas', 'Menlo', 'Courier New', monospace;
+        font-size: 14px;
+        line-height: 1.5;
+        min-height: 100%;
+      }
+
+      /* scanlines CRT */
+      body:before {
+        content: '';
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        pointer-events: none;
+        z-index: 1000;
+        background-image: -webkit-repeating-linear-gradient(
+          top,
+          rgba(0, 255, 156, 0.03) 0px,
+          rgba(0, 255, 156, 0.03) 1px,
+          transparent 1px,
+          transparent 3px
+        );
+        background-image: repeating-linear-gradient(
+          to bottom,
+          rgba(0, 255, 156, 0.03) 0px,
+          rgba(0, 255, 156, 0.03) 1px,
+          transparent 1px,
+          transparent 3px
+        );
+      }
+
+      /* vinheta */
+      body:after {
+        content: '';
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        pointer-events: none;
+        z-index: 999;
+        background: -webkit-radial-gradient(
+          50% 40%,
+          ellipse cover,
+          rgba(0, 0, 0, 0) 40%,
+          rgba(0, 0, 0, 0.55) 100%
+        );
+        background: radial-gradient(
+          ellipse at 50% 40%,
+          rgba(0, 0, 0, 0) 40%,
+          rgba(0, 0, 0, 0.55) 100%
+        );
+      }
+
+      #brand {
+        text-align: center;
+        padding: 14px 10px 12px;
+        background: -webkit-linear-gradient(top, #08120e 0%, #050a08 100%);
+        background: linear-gradient(180deg, #08120e 0%, #050a08 100%);
+        border-bottom: 1px solid #0f2b22;
+        position: relative;
+        overflow: hidden;
+      }
+
+      #brand:before {
+        content: '';
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        height: 1px;
+        background: -webkit-linear-gradient(
+          left,
+          rgba(0, 255, 156, 0) 0%,
+          #00ff9c 50%,
+          rgba(0, 255, 156, 0) 100%
+        );
+        background: linear-gradient(
+          90deg,
+          rgba(0, 255, 156, 0) 0%,
+          #00ff9c 50%,
+          rgba(0, 255, 156, 0) 100%
+        );
+        -webkit-animation: scan 3s linear infinite;
+        animation: scan 3s linear infinite;
+      }
+
+      @-webkit-keyframes scan {
+        0%,
+        100% {
+          opacity: 0.3;
+        }
+        50% {
+          opacity: 1;
+        }
+      }
+      @keyframes scan {
+        0%,
+        100% {
+          opacity: 0.3;
+        }
+        50% {
+          opacity: 1;
+        }
+      }
+
+      #brand img {
+        width: 28px;
+        height: 28px;
+        margin-right: 8px;
+        -webkit-border-radius: 50%;
+        border-radius: 50%;
+        vertical-align: middle;
+        -webkit-box-shadow: 0 0 6px rgba(0, 255, 156, 0.7);
+        box-shadow: 0 0 6px rgba(0, 255, 156, 0.7);
+      }
+
+      #brand b {
+        font-size: 15px;
+        font-weight: 700;
+        letter-spacing: 0.28em;
+        color: #00ff9c;
+        vertical-align: middle;
+        text-shadow: 0 0 6px rgba(0, 255, 156, 0.65);
+        text-transform: uppercase;
+      }
+
+      #wrap {
+        padding: 22px 18px 40px;
+        margin: 0 auto;
+        position: relative;
+      }
+
+      #wrap:before {
+        content: '>_ system.bootstrap';
+        display: block;
+        color: #6b8f7d;
+        font-size: 11px;
+        letter-spacing: 0.1em;
+        margin-bottom: 14px;
+        padding-bottom: 8px;
+        border-bottom: 1px dashed #0f2b22;
+      }
+
+      #state {
+        font-size: 20px;
+        font-weight: 700;
+        margin: 0 0 10px;
+        color: #00ff9c;
+        text-shadow: 0 0 6px rgba(0, 255, 156, 0.65);
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+      }
+
+      #state:before {
+        content: '\25B8  '; /* ▸ */
+        color: #ff00d4;
+        -webkit-animation: blink 1s steps(2) infinite;
+        animation: blink 1s steps(2) infinite;
+      }
+
+      @-webkit-keyframes blink {
+        50% {
+          opacity: 0;
+        }
+      }
+      @keyframes blink {
+        50% {
+          opacity: 0;
+        }
+      }
+
+      #det {
+        font-size: 13px;
+        color: #6b8f7d;
+        margin: 0 0 10px;
+        padding: 8px 10px;
+        border-left: 2px solid #0f2b22;
+        background: rgba(0, 255, 156, 0.02);
+      }
+
+      #det b {
+        color: #c8ffe0;
+        font-weight: 700;
+        text-shadow: 0 0 4px rgba(200, 255, 224, 0.4);
+      }
+
+      #cache {
+        font-size: 12px;
+        color: #6b8f7d;
+        margin: 0;
+        min-height: 16px;
+        padding: 6px 10px;
+        border-left: 2px solid #0f2b22;
+        background: rgba(0, 255, 156, 0.02);
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+      }
+
+      #cache:before {
+        content: '[cache] ';
+        color: #ff00d4;
+        opacity: 0.7;
+      }
+
+      #cache.cacheok {
+        color: #00ff9c;
+        border-left-color: #00ff9c;
+      }
+
+      .ok {
+        color: #00ff9c !important;
+        text-shadow: 0 0 6px rgba(0, 255, 156, 0.65);
+      }
+
+      .bad {
+        color: #ff3355 !important;
+        text-shadow: 0 0 6px rgba(255, 51, 85, 0.7);
+      }
+
+      .warn {
+        color: #ffd400 !important;
+        text-shadow: 0 0 6px rgba(255, 212, 0, 0.6);
+      }
+
+      #wrap:after {
+        content: '';
+        position: absolute;
+        top: 60px;
+        right: 0;
+        width: 60px;
+        height: 1px;
+        background: #ff00d4;
+        opacity: 0.4;
+        -webkit-box-shadow:
+          0 0 8px #ff00d4,
+          40px 20px 0 0 rgba(255, 0, 212, 0.5),
+          80px 40px 0 0 rgba(255, 0, 212, 0.35);
+        box-shadow:
+          0 0 8px #ff00d4,
+          40px 20px 0 0 rgba(255, 0, 212, 0.5),
+          80px 40px 0 0 rgba(255, 0, 212, 0.35);
+        -webkit-animation: drift 4s ease-in-out infinite alternate;
+        animation: drift 4s ease-in-out infinite alternate;
+        pointer-events: none;
+      }
+
+      @-webkit-keyframes drift {
+        0% {
+          -webkit-transform: translateX(0);
+          opacity: 0.3;
+        }
+        100% {
+          -webkit-transform: translateX(-20px);
+          opacity: 0.7;
+        }
+      }
+      @keyframes drift {
+        0% {
+          transform: translateX(0);
+          opacity: 0.3;
+        }
+        100% {
+          transform: translateX(-20px);
+          opacity: 0.7;
+        }
+      }
+
+      #foot {
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 6px;
+        text-align: center;
+        font-size: 11px;
+        color: #6b8f7d;
+        letter-spacing: 0.15em;
+        pointer-events: none;
+        line-height: 1.5;
+        text-transform: uppercase;
+      }
+
+      #foot b {
+        color: #00ff9c;
+        font-weight: 600;
+        text-shadow: 0 0 6px rgba(0, 255, 156, 0.65);
+      }
+
+      #foot a {
+        color: #ff00d4;
+        text-decoration: none;
+        pointer-events: auto;
+        border-bottom: 1px dashed #ff00d4;
+      }
+
+      #foot .hint {
+        color: #6b8f7d;
+        font-style: italic;
+        margin-left: 4px;
+        text-transform: none;
+        letter-spacing: 0.02em;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="brand"><b>PS4 DO PAPITO</b></div>
+    <div id="wrap">
+      <div id="state">detectando o firmware...</div>
+      <div id="det"></div>
+      <div id="cache"></div>
+    </div>
+
+    <script>
+      (function () {
+        var stateEl = document.getElementById('state');
+        var detEl = document.getElementById('det');
+        var cacheEl = document.getElementById('cache');
+        function setState(t, c) {
+          stateEl.textContent = t;
+          stateEl.className = c || '';
+        }
+        function setCache(t, ok) {
+          cacheEl.textContent = t;
+          cacheEl.className = ok ? 'cacheok' : '';
+        }
+        var params = new URLSearchParams(location.search);
+
+        // Firmwares this build has a MEASURED kernel table for. jb.js still runs its
+        // own kernel-table-present gate, so this is UX only -- an unlisted firmware
+        // can still be launched with a tap. KEEP IN SYNC with ps4_offsets.js: add a
+        // fwnum here in the SAME commit that fills that firmware's kernel RVAs.
+        // The PS4 reports its minor as two hex digits in the UA (13.52 -> minor 0x52).
+        var SUPPORTED = { 1302: 1, 1304: 1, 1350: 1, 1352: 1 }; // all measured on hardware
+
+        var key = null,
+          fwnum = null;
+        var m = /PlayStation\s+4[\/ ](\d+)\.(\d+)/.exec(navigator.userAgent);
+        if (m) {
+          var ms = parseInt(m[2], 16).toString(16);
+          if (ms.length < 2) ms = '0' + ms;
+          key = m[1] + '.' + ms;
+          fwnum = parseInt(m[1], 10) * 100 + parseInt(ms, 10);
+        }
+
+        var forced = params.get('force') === '1';
+        var supported = forced || (fwnum !== null && SUPPORTED[fwnum] === 1);
+        detEl.innerHTML =
+          'firmware <b>' +
+          (key || 'unknown') +
+          '</b>' +
+          (supported
+            ? ' &middot; <b>compatível</b>'
+            : ' &middot; não está na tabela deste build');
+
+        var target = 'jb.html' + location.search;
+        function go() {
+          setState('carregando o desbloqueio...', 'warn');
+          location.replace(target);
+        }
+
+        function waitForTap(msg, action) {
+          setState(msg, 'warn');
+          function fire() {
+            window.removeEventListener('click', fire);
+            window.removeEventListener('keydown', fire);
+            action();
+          }
+          window.addEventListener('click', fire);
+          window.addEventListener('keydown', fire);
+        }
+
+        // Off-target consoles are not launched automatically -- one tap still runs
+        // it, so a user-agent quirk on the real 13.52 console can never lock it out.
+        if (!supported) {
+          setState('UNSUPPORTED FIRMWARE', 'bad');
+          waitForTap(
+            'NÂO SUPORTADO (' +
+              (key || 'unknown') +
+              ') -- aperta X para executar',
+            go,
+          );
+          return;
+        }
+
+        var ac = window.applicationCache;
+        if (!ac || !document.documentElement.hasAttribute('manifest')) {
+          go();
+        } else if (!navigator.onLine) {
+          setCache('offline -- from cache', true);
+          go();
+        } else if (ac.status === ac.IDLE) {
+          setCache('cached', true);
+          go();
+        } else if (ac.status === ac.UPDATEREADY) {
+          try {
+            ac.swapCache();
+          } catch (e) {}
+          setCache('update downloaded', true);
+          waitForTap(
+            'ATUALIZAÇÃO PRONTA -- pressione X para recarregar e executar',
+            function () {
+              location.reload();
+            },
+          );
+        } else {
+          setCache('checking cache...');
+          ac.addEventListener(
+            'downloading',
+            function () {
+              setCache('caching for offline (first run)...');
+            },
+            false,
+          );
+          ac.addEventListener(
+            'progress',
+            function (e) {
+              if (e && e.total)
+                setCache(
+                  'caching ' + Math.round((e.loaded / e.total) * 100) + '%',
+                );
+            },
+            false,
+          );
+          ac.addEventListener(
+            'cached',
+            function () {
+              setCache('cached for offline use', true);
+              waitForTap(
+                'EM CACHE (primeira execução) -- pressione X para executar',
+                go,
+              );
+            },
+            false,
+          );
+          ac.addEventListener(
+            'updateready',
+            function () {
+              try {
+                ac.swapCache();
+              } catch (e) {}
+              setCache('update downloaded', true);
+              waitForTap(
+                'ATUALIZAÇÃO PRONTA — pressione X para recarregar e executar',
+                function () {
+                  location.reload();
+                  ('');
+                },
+              );
+            },
+            false,
+          );
+          ac.addEventListener(
+            'noupdate',
+            function () {
+              setCache('cached -- offline ready', true);
+              go();
+            },
+            false,
+          );
+          ac.addEventListener(
+            'error',
+            function () {
+              setCache('cache unavailable');
+              waitForTap(
+                'Falha no cache — pressione X para executar mesmo assim',
+                go,
+              );
+            },
+            false,
+          );
+          ac.addEventListener(
+            'obsolete',
+            function () {
+              setCache('cache obsolete');
+              waitForTap('CACHE OBSOLETO — pressione X para executar', go);
+            },
+            false,
+          );
+        }
+      })();
+    </script>
+    <div id="foot"></div>
+  </body>
+</html>
