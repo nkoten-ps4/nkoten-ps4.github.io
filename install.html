@@ -1,5 +1,8 @@
-<html manifest="cache.appcache">
+<!doctype html>
+<html lang="en" manifest="cache.appcache">
   <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>NKOTEN PS4</title>
     <style>
       * {
@@ -25,7 +28,7 @@
         width: 100vw;
       }
 
-      /* ===== Sidebar ===== */
+      /* ===== Sidebar (mesmo padrão da home) ===== */
       #sidebar {
         width: 230px;
         flex-shrink: 0;
@@ -189,17 +192,17 @@
       /* ===== Content ===== */
       #content {
         flex: 1;
+        overflow-y: auto;
+        overflow-x: hidden;
+        position: relative;
         display: flex;
         align-items: center;
         justify-content: center;
-        padding: 60px;
-        position: relative;
+        padding: 56px 60px;
       }
-      #stage {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 26px;
+      .view {
+        width: 100%;
+        max-width: 680px;
         animation: fadeUp 0.55s ease;
       }
       @keyframes fadeUp {
@@ -213,117 +216,63 @@
         }
       }
 
-      #spinner {
-        width: 64px;
-        height: 64px;
-        border: 5px solid rgba(255, 106, 0, 0.18);
-        border-top-color: #ff6a00;
-        border-radius: 50%;
-        animation: spin 1s linear infinite;
-        box-shadow: 0 0 34px rgba(255, 106, 0, 0.25);
-      }
-      @keyframes spin {
-        to {
-          transform: rotate(360deg);
-        }
+      .step-tag {
+        display: inline-block;
+        padding: 6px 14px;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: #ff8a3c;
+        background: rgba(255, 106, 0, 0.1);
+        border: 1px solid rgba(255, 106, 0, 0.35);
+        border-radius: 20px;
+        margin-bottom: 20px;
       }
 
-      .info {
-        font-family: Consolas, monospace;
-        font-size: 16px;
-        color: #c8ced8;
-        letter-spacing: 0.05em;
-        text-align: center;
-        white-space: nowrap;
-        min-height: 22px;
+      /* #state — o JS original aplica className direto: usar seletores #state.X */
+      #state {
+        font-size: 40px;
+        font-weight: 800;
+        letter-spacing: -0.5px;
+        line-height: 1.12;
+        margin: 0 0 14px;
+        color: #e6ebf2;
+        transition: color 0.3s ease;
       }
-      .info b {
-        color: #ff8a3c;
-        font-weight: 700;
-      }
-      .info.done {
+      #state.ok {
         color: #7fd0a0;
       }
-      .info.done b {
+      #state.bad {
+        color: #d08a7f;
+      }
+      #state.warn {
+        color: #d8c07f;
+      }
+
+      #det {
+        font-size: 15px;
+        color: #8b95a3;
+        margin: 0 0 14px;
+        line-height: 1.6;
+      }
+      #det b {
+        color: #c8ced8;
+        font-weight: 600;
+      }
+
+      #cache {
+        font-size: 12px;
+        color: #5c6672;
+        letter-spacing: 0.08em;
+        margin: 0;
+        min-height: 16px;
+        transition: color 0.25s ease;
+      }
+      #cache.cacheok {
         color: #7fd0a0;
       }
     </style>
-    <script>
-      /*
-       * Cache primer.
-       *
-       * Every asset the exploit chain needs (jb.js, core.js, mem.js, int64.js,
-       * ps4_offsets.js, rpc_worker.js, hen.bin, goldhen.bin, ps4debug.bin,
-       * patches/*.bin) is listed in cache.appcache. If a user lands on
-       * index.html directly, the exploit starts BEFORE those downloads finish
-       * and any fetch(PAYLOAD_FILE) during the run is a live network fetch --
-       * an extra chance for a mid-exploit stall on a flaky Wi-Fi.
-       *
-       * cache.html sits in front of that: it does nothing but download the
-       * manifest with visible progress, then reload the tab. The reload
-       * re-triggers AppCache, but this time every entry is already in the
-       * on-console cache -- index.html loads instant, jb.js does the same,
-       * and every fetch inside the exploit becomes a local read.
-       *
-       * The history-stack collapse below is copied from the mansoor0x/polpNO
-       * variant of this pattern: WebKit's back-forward cache can hold onto
-       * a stale-primed exploit state from a previous run, and wiping the
-       * history entries before the reload makes the second load look like a
-       * fresh navigation.
-       */
-
-      // Swap the visible URL to index.html without navigating -- so when the
-      // AppCache-completion handler below calls location.reload(), the reload
-      // actually hits index.html (the exploit page), not this page.
-      history.replaceState(null, null, 'install.html');
-
-      // Collapse the tab history so back-button behaviour is clean and WebKit
-      // isn't holding references to an earlier navigation state.
-      var histlength = history.length;
-      try {
-        history.go(-histlength);
-      } catch (e) {}
-
-      function DLProgress(e) {
-        var msgs = document.getElementById('msgs');
-        if (!msgs) return;
-        var pct = e.total ? Math.round((e.loaded / e.total) * 100) : 0;
-        msgs.innerHTML =
-          "Shadow's Services &middot; Installing ... <b>" + pct + '%</b>';
-      }
-
-      function DisplayCacheProgress() {
-        var msgs = document.getElementById('msgs');
-        setTimeout(function () {
-          if (msgs)
-            msgs.innerHTML = "Shadow's Services &middot; <b>Cache OK</b>";
-        }, 1500);
-        setTimeout(function () {
-          location.reload();
-        }, 2500);
-      }
-
-      if (window.applicationCache) {
-        window.applicationCache.addEventListener('progress', DLProgress, false);
-        window.applicationCache.oncached = function () {
-          DisplayCacheProgress();
-        };
-        window.applicationCache.onupdateready = function () {
-          DisplayCacheProgress();
-        };
-        // If the cache is already there (repeat visit) neither event fires -- just
-        // hand off to the exploit page.
-        window.applicationCache.addEventListener(
-          'noupdate',
-          function () {
-            setTimeout(function () {
-              location.reload();
-            }, 200);
-          },
-          false,
-        );
-      }
-    </script>
   </head>
   <body>
     <div id="app">
@@ -375,17 +324,180 @@
       </aside>
 
       <main id="content">
-        <div id="stage">
-          <div id="spinner"></div>
-          <div id="msgs" class="info">
-            NKOTEN PS4 &middot; Priming cache ...
-          </div>
+        <div class="view">
+          <span class="step-tag">Desbloqueio · Passo 1 de 2</span>
+          <h1 id="state">detectando firmware...</h1>
+          <p id="det"></p>
+          <p id="cache"></p>
         </div>
       </main>
     </div>
 
     <script>
-      /* Helper isolado p/ PT/EN visual. */
+      (function () {
+        var stateEl = document.getElementById('state');
+        var detEl = document.getElementById('det');
+        var cacheEl = document.getElementById('cache');
+        function setState(t, c) {
+          stateEl.textContent = t;
+          stateEl.className = c || '';
+        }
+        function setCache(t, ok) {
+          cacheEl.textContent = t;
+          cacheEl.className = ok ? 'cacheok' : '';
+        }
+        var params = new URLSearchParams(location.search);
+
+        // Firmwares this build has a MEASURED kernel table for. jb.js still runs its
+        // own kernel-table-present gate, so this is UX only -- an unlisted firmware
+        // can still be launched with a tap. KEEP IN SYNC with ps4_offsets.js: add a
+        // fwnum here in the SAME commit that fills that firmware's kernel RVAs.
+        // The PS4 reports its minor as two hex digits in the UA (13.52 -> minor 0x52).
+        var SUPPORTED = { 1302: 1, 1304: 1, 1350: 1, 1352: 1 }; // all measured on hardware
+
+        var key = null,
+          fwnum = null;
+        var m = /PlayStation\s+4[\/ ](\d+)\.(\d+)/.exec(navigator.userAgent);
+        if (m) {
+          var ms = parseInt(m[2], 16).toString(16);
+          if (ms.length < 2) ms = '0' + ms;
+          key = m[1] + '.' + ms;
+          fwnum = parseInt(m[1], 10) * 100 + parseInt(ms, 10);
+        }
+
+        var forced = params.get('force') === '1';
+        var supported = forced || (fwnum !== null && SUPPORTED[fwnum] === 1);
+        detEl.innerHTML =
+          'firmware <b>' +
+          (key || 'unknown') +
+          '</b>' +
+          (supported
+            ? ' &middot; <b>supported</b>'
+            : " &middot; not in this build's kernel table");
+
+        var target = 'jb.html' + location.search;
+        function go() {
+          setState('loading jailbreak...', 'warn');
+          location.replace(target);
+        }
+
+        function waitForTap(msg, action) {
+          setState(msg, 'warn');
+          function fire() {
+            window.removeEventListener('click', fire);
+            window.removeEventListener('keydown', fire);
+            action();
+          }
+          window.addEventListener('click', fire);
+          window.addEventListener('keydown', fire);
+        }
+
+        // Off-target consoles are not launched automatically -- one tap still runs
+        // it, so a user-agent quirk on the real 13.52 console can never lock it out.
+        if (!supported) {
+          setState('NÃO COMPATIVEL COM ESSA FIRMWARE', 'bad');
+          waitForTap(
+            'NÃO SUPORTA (' +
+              (key || 'unknown') +
+              ') -- APERTE  X PARA COMEÇAR ',
+            go,
+          );
+          return;
+        }
+
+        var ac = window.applicationCache;
+        if (!ac || !document.documentElement.hasAttribute('manifest')) {
+          go();
+        } else if (!navigator.onLine) {
+          setCache('offline -- from cache', true);
+          go();
+        } else if (ac.status === ac.IDLE) {
+          setCache('cached', true);
+          go();
+        } else if (ac.status === ac.UPDATEREADY) {
+          try {
+            ac.swapCache();
+          } catch (e) {}
+          setCache('update downloaded', true);
+          waitForTap(
+            'UPDATE READY -- press X or tap to reload & run',
+            function () {
+              location.reload();
+            },
+          );
+        } else {
+          setCache('checking cache...');
+          ac.addEventListener(
+            'downloading',
+            function () {
+              setCache('caching for offline (first run)...');
+            },
+            false,
+          );
+          ac.addEventListener(
+            'progress',
+            function (e) {
+              if (e && e.total)
+                setCache(
+                  'caching ' + Math.round((e.loaded / e.total) * 100) + '%',
+                );
+            },
+            false,
+          );
+          ac.addEventListener(
+            'cached',
+            function () {
+              setCache('cached for offline use', true);
+              waitForTap('CACHED (first run) -- press X or tap to run', go);
+            },
+            false,
+          );
+          ac.addEventListener(
+            'updateready',
+            function () {
+              try {
+                ac.swapCache();
+              } catch (e) {}
+              setCache('update downloaded', true);
+              waitForTap(
+                'UPDATE READY -- press X or tap to reload & run',
+                function () {
+                  location.reload();
+                },
+              );
+            },
+            false,
+          );
+          ac.addEventListener(
+            'noupdate',
+            function () {
+              setCache('cached -- offline ready', true);
+              go();
+            },
+            false,
+          );
+          ac.addEventListener(
+            'error',
+            function () {
+              setCache('cache unavailable');
+              waitForTap('CACHE FAILED -- press X or tap to run anyway', go);
+            },
+            false,
+          );
+          ac.addEventListener(
+            'obsolete',
+            function () {
+              setCache('cache obsolete');
+              waitForTap('CACHE OBSOLETE -- press X or tap to run', go);
+            },
+            false,
+          );
+        }
+      })();
+    </script>
+
+    <!-- Helper isolado p/ PT/EN visual. NÃO interfere no script acima. -->
+    <script>
       (function () {
         var L = 'pt';
         try {
